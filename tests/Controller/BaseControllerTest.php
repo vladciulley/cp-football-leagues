@@ -7,7 +7,6 @@ use App\Entity\Team;
 use App\Entity\User;
 use App\Service\LeagueManager;
 use App\Service\TeamManager;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Client;
@@ -258,16 +257,6 @@ abstract class BaseControllerTest extends WebTestCase
     protected function getEntityManager(): EntityManagerInterface
     {
         return $this->getDoctrine()->getManager();
-    }
-
-    /**
-     * @param $class
-     *
-     * @return ServiceEntityRepository
-     */
-    protected function getRepository($class): ServiceEntityRepository
-    {
-        return $this->getDoctrine()->getRepository($class);
     }
 
     /**
