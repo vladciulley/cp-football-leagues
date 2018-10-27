@@ -26,13 +26,15 @@ class ExceptionListener
             switch ($exception->getStatusCode()) {
 
                 case JsonResponse::HTTP_NOT_FOUND:
-                    $response = new JsonResponse(['message' => 'Resource Not Found'], $exception->getStatusCode());
-                    $response->headers->set('Content-Type', 'application/json');
+                    $response = new JsonResponse(['message' => 'Resource Not Found']);
                     break;
                     
                 case JsonResponse::HTTP_METHOD_NOT_ALLOWED:
-                    $response = new JsonResponse(['message' => 'HTTP Method Not Allowed'], $exception->getStatusCode());
-                    $response->headers->set('Content-Type', 'application/json');
+                    $response = new JsonResponse(['message' => 'HTTP Method Not Allowed']);
+                    break;
+                    
+                case JsonResponse::HTTP_INTERNAL_SERVER_ERROR:
+                    $response = new JsonResponse(['message' => 'Server Error']);
                     break;
                     
                 default:
@@ -40,6 +42,10 @@ class ExceptionListener
             }
 
             if (isset($response)) {
+                
+                $response->setStatusCode($exception->getStatusCode());
+                $response->headers->set('Content-Type', 'application/json');
+                
                 $event->setResponse($response);
             }
         }
