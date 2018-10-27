@@ -79,6 +79,7 @@ abstract class BaseControllerTest extends WebTestCase
         }
         
         try {
+            
             $this->client->request(
                 $method,
                 $uri,
@@ -87,13 +88,26 @@ abstract class BaseControllerTest extends WebTestCase
                 $server,
                 $content
             );
+            
+            $response = $this->client->getResponse();
+            
         } catch (NotFoundHttpException $e) {
-            return new Response(json_encode(['message' => $e->getMessage()]), $e->getStatusCode());
+            $response = new Response(json_encode(['message' => $e->getMessage()]), $e->getStatusCode());
+            $response->headers->set('Content-Type', 'application/json');
         } catch (MethodNotAllowedHttpException $e) {
-            return new Response(json_encode(['message' => $e->getMessage()]), $e->getStatusCode());
+            $response = new Response(json_encode(['message' => $e->getMessage()]), $e->getStatusCode());
+            $response->headers->set('Content-Type', 'application/json');
         }
+        
+        $this->assertThat(
+            $response->headers->get('Content-Type'),
+            $this->logicalOr(
+                $this->equalTo('application/json'),
+                $this->isNull()
+            )
+        );
 
-        return $this->client->getResponse();
+        return $response;
     }
 
     /**
