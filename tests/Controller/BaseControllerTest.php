@@ -78,26 +78,17 @@ abstract class BaseControllerTest extends WebTestCase
             $content = json_encode($params);
         }
         
-        try {
-            
-            $this->client->request(
-                $method,
-                $uri,
-                $params,
-                [],
-                $server,
-                $content
-            );
-            
-            $response = $this->client->getResponse();
-            
-        } catch (NotFoundHttpException $e) {
-            $response = new Response(json_encode(['message' => $e->getMessage()]), $e->getStatusCode());
-            $response->headers->set('Content-Type', 'application/json');
-        } catch (MethodNotAllowedHttpException $e) {
-            $response = new Response(json_encode(['message' => $e->getMessage()]), $e->getStatusCode());
-            $response->headers->set('Content-Type', 'application/json');
-        }
+        
+        $this->client->request(
+            $method,
+            $uri,
+            $params,
+            [],
+            $server,
+            $content
+        );
+        
+        $response = $this->client->getResponse();
         
         $this->assertThat(
             $response->headers->get('Content-Type'),

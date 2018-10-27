@@ -29,7 +29,12 @@ class ExceptionListener
                     $response = new JsonResponse(['message' => 'Resource Not Found'], $exception->getStatusCode());
                     $response->headers->set('Content-Type', 'application/json');
                     break;
-
+                    
+                case JsonResponse::HTTP_METHOD_NOT_ALLOWED:
+                    $response = new JsonResponse(['message' => 'HTTP Method Not Allowed'], $exception->getStatusCode());
+                    $response->headers->set('Content-Type', 'application/json');
+                    break;
+                    
                 default:
                     // do nothing
             }
