@@ -34,12 +34,19 @@ class SecurityControllerTest extends BaseControllerTest
         }
     }
     
+    public function testLogin(): void
+    {
+        $token = $this->getJwtToken();
+        
+        $this->assertNotEmpty($token);
+    }
+    
     public function testUnauthorized(): void
     {
         $leagueId = $this->getOneFixtureId(self::LEAGUES_FIXTURES_KEY);
         
-        list($code, $body) = $this->request('GET', '/leagues/' . $leagueId);
+        $response = $this->request('GET', '/leagues/' . $leagueId);
 
-        $this->assertEquals(JsonResponse::HTTP_UNAUTHORIZED, $code);
+        $this->assertEquals(JsonResponse::HTTP_UNAUTHORIZED, $response->getStatusCode());
     }
 }

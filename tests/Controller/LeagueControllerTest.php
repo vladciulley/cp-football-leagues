@@ -78,14 +78,25 @@ class LeagueControllerTest extends BaseControllerTest
     {
         $token = $this->getJwtToken();
         
-        list($code, $body) = $this->request('GET', '/leagues/0', $token);
-        $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $code);
+        $tests = [
+            [
+                'method' => 'GET',
+                'uri' => '/leagues/0',
+            ],
+            [
+                'method' => 'GET',
+                'uri' => '/leagues/0/teams',
+            ],
+            [
+                'method' => 'DELETE',
+                'uri' => '/leagues/0',
+            ],
+        ];
         
-        list($code, $body) = $this->request('GET', '/leagues/0/teams', $token);
-        $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $code);
-        
-        list($code, $body) = $this->request('DELETE', '/leagues/0', $token);
-        $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $code);
+        foreach ($tests as $test) {
+            $response = $this->request($test['method'], $test['uri'], $token);
+            $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $response->getStatusCode(), $test['method'] . ' ' . $test['uri'] . ' with token ' . $token);
+        }
     }
     
     public function testGetLeagues(): void
@@ -97,12 +108,15 @@ class LeagueControllerTest extends BaseControllerTest
         $leagueManager = $this->getService(LeagueManager::class);
         $league = $leagueManager->get($leagueId);
 
-        list($code, $body) = $this->request('GET', '/leagues/' . $leagueId, $token);
+        $response = $this->request('GET', '/leagues/' . $leagueId, $token);
 
-        $this->assertEquals(JsonResponse::HTTP_OK, $code);
-        $this->assertTrue(is_array($body));
-        $this->assertArrayHasKey('name', $body);
-        $this->assertEquals($league->getName(), $body['name']);
+        $responseData = $this->getResponseData($response);
+        
+        $this->assertEquals(JsonResponse::HTTP_OK, $response->getStatusCode());
+        $this->assertTrue(is_array($responseData));
+        $this->assertEquals(1, count($responseData));
+        $this->assertArrayHasKey('name', $responseData);
+        $this->assertEquals($league->getName(), $responseData['name']);
         
         $this->getEntityManager()->clear();
     }
@@ -116,18 +130,20 @@ class LeagueControllerTest extends BaseControllerTest
         $leagueManager = $this->getService(LeagueManager::class);
         $league = $leagueManager->get($leagueId);
 
-        list($code, $body) = $this->request('GET', '/leagues/' . $leagueId . '/teams', $token);
+        $response = $this->request('GET', '/leagues/' . $leagueId . '/teams', $token);
 
-        $this->assertEquals(JsonResponse::HTTP_OK, $code);
-        $this->assertTrue(is_array($body));
-        $this->assertEquals(3, count($body));
-        $this->assertEquals(3, count($body[0]));
-        $this->assertArrayHasKey('name', $body[0]);
-        $this->assertArrayHasKey('strip', $body[0]);
-        $this->assertArrayHasKey('league', $body[0]);
-        $this->assertTrue(is_string($body[0]['name']));
-        $this->assertStringStartsWith('Test Team', $body[0]['name']);
-        $this->assertEquals($league->getName(), $body[0]['league']);
+        $responseData = $this->getResponseData($response);
+
+        $this->assertEquals(JsonResponse::HTTP_OK, $response->getStatusCode());
+        $this->assertTrue(is_array($responseData));
+        $this->assertEquals(3, count($responseData));
+        $this->assertEquals(3, count($responseData[0]));
+        $this->assertArrayHasKey('name', $responseData[0]);
+        $this->assertArrayHasKey('strip', $responseData[0]);
+        $this->assertArrayHasKey('league', $responseData[0]);
+        $this->assertTrue(is_string($responseData[0]['name']));
+        $this->assertStringStartsWith('Test Team', $responseData[0]['name']);
+        $this->assertEquals($league->getName(), $responseData[0]['league']);
         
         $this->getEntityManager()->clear();
     }
@@ -137,10 +153,12 @@ class LeagueControllerTest extends BaseControllerTest
         $token = $this->getJwtToken();
         $leagueId = $this->getOneFixtureId(self::LEAGUES_FIXTURES_KEY);
 
-        list($code, $body) = $this->request('DELETE', '/leagues/' . $leagueId, $token);
+        $response = $this->request('DELETE', '/leagues/' . $leagueId, $token);
+        
+        $responseData = $this->getResponseData($response);
 
-        $this->assertEquals(JsonResponse::HTTP_NO_CONTENT, $code);
-        $this->assertEmpty($body);
+        $this->assertEquals(JsonResponse::HTTP_NO_CONTENT, $response->getStatusCode());
+        $this->assertEmpty($responseData);
         
         /** @var LeagueManager $leagueManager */
         $leagueManager = $this->getService(LeagueManager::class);

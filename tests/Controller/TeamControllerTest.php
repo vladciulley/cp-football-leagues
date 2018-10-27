@@ -78,13 +78,23 @@ class TeamControllerTest extends BaseControllerTest
     {
         $token = $this->getJwtToken();
         
-        list($code, $body) = $this->request('GET', '/teams/0', $token);
-        $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $code);
+        $tests = [
+            [
+                'method' => 'GET',
+                'uri' => '/teams/0',
+            ],
+            [
+                'method' => 'PUT',
+                'uri' => '/teams/0',
+            ],
+        ];
         
-        list($code, $body) = $this->request('PUT', '/teams/0', $token);
-        $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $code);
-        
+        foreach ($tests as $test) {
+            $response = $this->request($test['method'], $test['uri'], $token);
+            $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $response->getStatusCode());
+        }
     }
+    
     
     public function testGetTeams(): void
     {
@@ -95,19 +105,21 @@ class TeamControllerTest extends BaseControllerTest
         $teamManager = $this->getService(TeamManager::class);
         $team = $teamManager->get($teamId);
 
-        list($code, $body) = $this->request('GET', '/teams/' . $teamId, $token);
+        $response = $this->request('GET', '/teams/' . $teamId, $token);
 
-        $this->assertEquals(JsonResponse::HTTP_OK, $code);
-        $this->assertTrue(is_array($body));
-        $this->assertEquals(3, count($body));
-        $this->assertArrayHasKey('name', $body);
-        $this->assertArrayHasKey('strip', $body);
-        $this->assertArrayHasKey('league', $body);
-        $this->assertTrue(is_string($body['name']));
-        $this->assertStringStartsWith('Test Team', $body['name']);
-        $this->assertEquals($body['name'], $team->getName());
-        $this->assertEquals($body['strip'], $team->getStrip());
-        $this->assertEquals($body['league'], $team->getLeague()->getName());
+        $responseData = $this->getResponseData($response);
+        
+        $this->assertEquals(JsonResponse::HTTP_OK, $response->getStatusCode());
+        $this->assertTrue(is_array($responseData));
+        $this->assertEquals(3, count($responseData));
+        $this->assertArrayHasKey('name', $responseData);
+        $this->assertArrayHasKey('strip', $responseData);
+        $this->assertArrayHasKey('league', $responseData);
+        $this->assertTrue(is_string($responseData['name']));
+        $this->assertStringStartsWith('Test Team', $responseData['name']);
+        $this->assertEquals($responseData['name'], $team->getName());
+        $this->assertEquals($responseData['strip'], $team->getStrip());
+        $this->assertEquals($responseData['league'], $team->getLeague()->getName());
         
         $this->getEntityManager()->clear();
     }
@@ -124,9 +136,9 @@ class TeamControllerTest extends BaseControllerTest
             'league_id' => '0'
         ];
         
-        list($code, $body) = $this->request('POST', '/teams', $token, $badParams);
+        $response = $this->request('POST', '/teams', $token, $badParams);
         
-        $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $code);
+        $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $response->getStatusCode());
         
         
         $goodParams = [
@@ -135,10 +147,12 @@ class TeamControllerTest extends BaseControllerTest
             'league_id' => $leagueId
         ];
         
-        list($code, $body) = $this->request('POST', '/teams', $token, $goodParams);
+        $response = $this->request('POST', '/teams', $token, $goodParams);
         
-        $this->assertEquals(JsonResponse::HTTP_CREATED, $code);
-        $this->assertEmpty($body);
+        $responseData = $this->getResponseData($response);
+        
+        $this->assertEquals(JsonResponse::HTTP_CREATED, $response->getStatusCode());
+        $this->assertEmpty($responseData);
     }
     
     public function testUpdateTeams(): void
@@ -154,9 +168,9 @@ class TeamControllerTest extends BaseControllerTest
             'league_id' => '0'
         ];
         
-        list($code, $body) = $this->request('PUT', '/teams/' . $teamId, $token, $badParams);
+        $response = $this->request('PUT', '/teams/' . $teamId, $token, $badParams);
         
-        $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $code);
+        $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $response->getStatusCode());
         
         
         $goodParams = [
@@ -165,10 +179,12 @@ class TeamControllerTest extends BaseControllerTest
             'league_id' => $leagueId
         ];
         
-        list($code, $body) = $this->request('PUT', '/teams/' . $teamId, $token, $goodParams);
+        $response = $this->request('PUT', '/teams/' . $teamId, $token, $goodParams);
         
-        $this->assertEquals(JsonResponse::HTTP_NO_CONTENT, $code);
-        $this->assertEmpty($body);
+        $responseData = $this->getResponseData($response);
+        
+        $this->assertEquals(JsonResponse::HTTP_NO_CONTENT, $response->getStatusCode());
+        $this->assertEmpty($responseData);
         
         
         $this->getEntityManager()->clear();

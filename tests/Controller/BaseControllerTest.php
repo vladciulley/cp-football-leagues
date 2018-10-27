@@ -4,11 +4,12 @@ namespace App\Tests\Controller;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Bridge\Doctrine\ManagerRegistry;
+use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 abstract class BaseControllerTest extends WebTestCase
 {
@@ -19,22 +20,102 @@ abstract class BaseControllerTest extends WebTestCase
     /** @var array $fixturesIds */
     private $fixturesIds = [];
     
-    /** @var Client $httpClient */
-    private $httpClient;
+    /** @var Client $client */
+    private $client;
     
     public function setUp(): void
     {
-        self::bootKernel();
-        $this->initHttpClient();
+        $this->initClient();
         static::loadTestFixtures();
     }
 
     public function tearDown(): void
     {
-        $this->httpClient = null;
+        $this->client = null;
         static::deleteTestFixtures();
         
         parent::tearDown();
+    }
+
+    abstract protected function loadTestFixtures(): void;
+
+    abstract protected function deleteTestFixtures(): void;
+    
+    /**
+     * Initialize the test client
+     */
+    private function initClient(): void
+    {
+        $this->client = static::createClient();
+        $this->client->catchExceptions(true);
+    }
+
+    /**
+     * @param string $method
+     * @param string $uri
+     * @param null   $token
+     * @param array  $params
+     *
+     * @return Response
+     */
+    protected function request($method, $uri, $token = null, $params = []): Response
+    {
+        $content = null;
+        $server = ['CONTENT_TYPE' => 'application/json'];
+        
+        if ($token) {
+            $server['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
+        }
+        
+        if (!empty($params)) {
+            $content = json_encode($params);
+        }
+        
+        try {
+            $this->client->request(
+                $method,
+                $uri,
+                $params,
+                [],
+                $server,
+                $content
+            );
+        } catch (NotFoundHttpException $e) {
+            return new Response(json_encode(['message' => $e->getMessage()]), $e->getStatusCode());
+        }
+
+        return $this->client->getResponse();
+    }
+    
+    /**
+     * Retrieves the JWT authentication token
+     *
+     * @return string
+     */
+    protected function getJwtToken(): string
+    {
+        $response = $this->request('POST', '/login', null, [
+            'username' => 'user1@localdev',
+            'password' => 'pass1',
+        ]);
+        
+        $responseData = $this->getResponseData($response);
+        
+        if (is_array($responseData) && array_key_exists('token', $responseData)) {
+            return $responseData['token'];
+        }
+        
+        return '';
+    }
+
+    /**
+     * @param Response $response
+     *
+     * @return array|null
+     */
+    public function getResponseData(Response $response): ?array 
+    {
+        return json_decode($response->getContent(), true);
     }
 
     /**
@@ -50,7 +131,7 @@ abstract class BaseControllerTest extends WebTestCase
     /**
      * @return ContainerInterface
      */
-    protected function getContainer()
+    protected function getContainer(): ContainerInterface
     {
         return self::$container;
     }
@@ -79,16 +160,6 @@ abstract class BaseControllerTest extends WebTestCase
     protected function getRepository($class): ServiceEntityRepository
     {
         return $this->getDoctrine()->getRepository($class);
-    }
-
-    /**
-     * Initialize the http client
-     */
-    private function initHttpClient(): void
-    {
-        $this->httpClient = new Client([
-            'base_uri' => 'http://localhost:8000',
-        ]);
     }
 
     /**
@@ -125,26 +196,6 @@ abstract class BaseControllerTest extends WebTestCase
         
         return null;
     }
-
-    /**
-     * Retrieves the JWT authentication token
-     *
-     * @return string
-     */
-    protected function getJwtToken(): string
-    {
-        list($code, $body) = $this->request('POST', '/login', null, [
-            'username' => 'user1@localdev',
-            'password' => 'pass1',
-        ]);
-
-        return $body['token'];
-    }
-
-
-    abstract protected function loadTestFixtures(): void;
-
-    abstract protected function deleteTestFixtures(): void;
     
     /**
      * @param array $entities
@@ -160,44 +211,6 @@ abstract class BaseControllerTest extends WebTestCase
         }
         
         return $ids;
-    }
-
-    /**
-     * @param string $method
-     * @param string $path
-     * @param null   $token
-     * @param array  $params
-     *
-     * @return array [code, [body]]
-     */
-    protected function request($method, $path, $token = null, $params = []): array
-    {
-        $options = [];
-
-        if (!empty($params)) {
-            $options['json'] = $params;
-        }
-
-        if ($token) {
-            $options['headers'] = [
-                'Authorization' => 'Bearer ' . $token,
-            ];
-        }
-
-        try {
-            $response = $this->httpClient->request($method, $path, $options);
-        } catch (GuzzleException $e) {
-
-            return [
-                $e->getCode(),
-                ['message' => $e->getMessage()],
-            ];
-        }
-
-        return [
-            $response->getStatusCode(),
-            json_decode($response->getBody()->getContents(), true),
-        ];
     }
 
 }
