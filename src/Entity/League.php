@@ -44,7 +44,7 @@ class League implements JsonSerializable
      */
     public static function create(string $name): League
     {
-        $league = new League();
+        $league = new self();
         $league->setName($name);
 
         return $league;

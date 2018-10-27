@@ -7,8 +7,6 @@ use ReallySimpleJWT\Token;
 
 class TokenManager
 {
-    const TOKEN_TTL = 60; // minutes
-    
     /** @var string $secret */
     private $secret;
 

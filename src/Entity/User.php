@@ -32,6 +32,14 @@ class User implements UserInterface
      * @ORM\Column(type="string")
      */
     private $password;
+    
+    public static function create(string $email): User
+    {
+        $user = new self();
+        $user->setEmail($email);
+
+        return $user;
+    }
 
     public function getId(): ?int
     {

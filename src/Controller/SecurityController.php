@@ -9,7 +9,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class SecurityController extends RESTController
 {
     /**
-     * @Route("/login", name="login")
+     * @Route("/login", name="login", methods={"POST"})
      * @param TokenManager $tokenManager
      *
      * @return \Symfony\Component\HttpFoundation\JsonResponse

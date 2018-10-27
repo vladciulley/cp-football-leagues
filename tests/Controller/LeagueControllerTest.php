@@ -2,78 +2,11 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\League;
-use App\Entity\Team;
 use App\Service\LeagueManager;
-use App\Service\TeamManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class LeagueControllerTest extends BaseControllerTest
 {
-    protected function loadTestFixtures(): void
-    {
-        $leagues = [
-            League::create('Test League One (with teams)'),
-            League::create('Test League Two (empty)'),
-        ];
-        
-        foreach ($leagues as $league) {
-            $this->getEntityManager()->persist($league);
-        }
-        
-        $this->getEntityManager()->flush();
-        
-        /** @var LeagueManager $leagueManager */
-        $leagueManager = $this->getService(LeagueManager::class);
-        $nonEmptyLeague = $leagueManager->getByName('Test League One (with teams)');
-        
-        $teams = [
-            Team::create('Test Team 1', 'color/white', $nonEmptyLeague),
-            Team::create('Test Team 2', 'color/black', $nonEmptyLeague),
-            Team::create('Test Team 3', 'color/green', $nonEmptyLeague),
-        ];
-        
-        foreach ($teams as $team) {
-            $this->getEntityManager()->persist($team);
-        }
-        
-        $this->getEntityManager()->flush();
-        
-        $this->setFixturesIds(self::LEAGUES_FIXTURES_KEY, $this->extractTestFixturesIds($leagues));
-        $this->setFixturesIds(self::TEAMS_FIXTURES_KEY, $this->extractTestFixturesIds($teams));
-        
-        $this->getEntityManager()->clear();
-    }
-
-    protected function deleteTestFixtures(): void
-    {
-        /** @var TeamManager $teamManager */
-        $teamManager = $this->getService(TeamManager::class);
-        
-        foreach ($this->getFixturesIds(self::TEAMS_FIXTURES_KEY) as $id) {
-            
-            $team = $teamManager->get($id);
-            
-            if ($team) {
-                $this->getEntityManager()->remove($team);
-            }
-        }
-        
-        /** @var LeagueManager $leagueManager */
-        $leagueManager = $this->getService(LeagueManager::class);
-
-        foreach ($this->getFixturesIds(self::LEAGUES_FIXTURES_KEY) as $id) {
-            
-            $league = $leagueManager->get($id);
-            
-            if ($league) {
-                $this->getEntityManager()->remove($league);
-            }
-        }
-        
-        $this->getEntityManager()->flush();
-    }
-    
     public function testNotFound(): void 
     {
         $token = $this->getJwtToken();
@@ -95,14 +28,14 @@ class LeagueControllerTest extends BaseControllerTest
         
         foreach ($tests as $test) {
             $response = $this->request($test['method'], $test['uri'], $token);
-            $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $response->getStatusCode(), $test['method'] . ' ' . $test['uri'] . ' with token ' . $token);
+            $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $response->getStatusCode());
         }
     }
     
     public function testGetLeagues(): void
     {
         $token = $this->getJwtToken();
-        $leagueId = $this->getOneFixtureId(self::LEAGUES_FIXTURES_KEY);
+        $leagueId = $this->getOneFixture(self::LEAGUES_FIXTURES_KEY);
         
         /** @var LeagueManager $leagueManager */
         $leagueManager = $this->getService(LeagueManager::class);
@@ -124,7 +57,7 @@ class LeagueControllerTest extends BaseControllerTest
     public function testGetLeaguesTeams(): void
     {
         $token = $this->getJwtToken();
-        $leagueId = $this->getOneFixtureId(self::LEAGUES_FIXTURES_KEY);
+        $leagueId = $this->getOneFixture(self::LEAGUES_FIXTURES_KEY);
         
         /** @var LeagueManager $leagueManager */
         $leagueManager = $this->getService(LeagueManager::class);
@@ -151,7 +84,7 @@ class LeagueControllerTest extends BaseControllerTest
     public function testDeleteLeagues(): void
     {
         $token = $this->getJwtToken();
-        $leagueId = $this->getOneFixtureId(self::LEAGUES_FIXTURES_KEY);
+        $leagueId = $this->getOneFixture(self::LEAGUES_FIXTURES_KEY);
 
         $response = $this->request('DELETE', '/leagues/' . $leagueId, $token);
         

@@ -2,6 +2,11 @@
 
 namespace App\Tests\Controller;
 
+use App\Entity\League;
+use App\Entity\Team;
+use App\Entity\User;
+use App\Service\LeagueManager;
+use App\Service\TeamManager;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\ManagerRegistry;
@@ -9,16 +14,22 @@ use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 abstract class BaseControllerTest extends WebTestCase
 {
     
     const TEAMS_FIXTURES_KEY = 'teams';
     const LEAGUES_FIXTURES_KEY = 'leagues';
+    const USERS_FIXTURES_KEY = 'users';
     
-    /** @var array $fixturesIds */
-    private $fixturesIds = [];
+    const TEST_USER_EMAIL = 'test.user@localhost';
+    const TEST_USER_PASSWORD = 'some-secret-password';
+    
+    /** @var array $fixtures */
+    private $fixtures = [];
     
     /** @var Client $client */
     private $client;
@@ -37,10 +48,6 @@ abstract class BaseControllerTest extends WebTestCase
         parent::tearDown();
     }
 
-    abstract protected function loadTestFixtures(): void;
-
-    abstract protected function deleteTestFixtures(): void;
-    
     /**
      * Initialize the test client
      */
@@ -82,11 +89,13 @@ abstract class BaseControllerTest extends WebTestCase
             );
         } catch (NotFoundHttpException $e) {
             return new Response(json_encode(['message' => $e->getMessage()]), $e->getStatusCode());
+        } catch (MethodNotAllowedHttpException $e) {
+            return new Response(json_encode(['message' => $e->getMessage()]), $e->getStatusCode());
         }
 
         return $this->client->getResponse();
     }
-    
+
     /**
      * Retrieves the JWT authentication token
      *
@@ -95,8 +104,8 @@ abstract class BaseControllerTest extends WebTestCase
     protected function getJwtToken(): string
     {
         $response = $this->request('POST', '/login', null, [
-            'username' => 'user1@localdev',
-            'password' => 'pass1',
+            'username' => self::TEST_USER_EMAIL,
+            'password' => self::TEST_USER_PASSWORD,
         ]);
         
         $responseData = $this->getResponseData($response);
@@ -106,6 +115,102 @@ abstract class BaseControllerTest extends WebTestCase
         }
         
         return '';
+    }
+
+    /**
+     * Generates database data for tests
+     */
+    protected function loadTestFixtures(): void
+    {
+        // Users
+        $user = User::create(self::TEST_USER_EMAIL);
+        $encodedPassword = $this->getService('security.user_password_encoder.generic')->encodePassword($user, self::TEST_USER_PASSWORD);
+        $user->setPassword($encodedPassword);
+        
+        $this->getEntityManager()->persist($user);
+        $this->getEntityManager()->flush();
+        
+        $this->setFixtures(self::USERS_FIXTURES_KEY, $this->extractFixturesEmails([$user]));
+        
+        // Leagues
+        $leagues = [
+            League::create('Test League One (with teams)'),
+            League::create('Test League Two (empty)'),
+        ];
+        
+        foreach ($leagues as $league) {
+            $this->getEntityManager()->persist($league);
+        }
+        
+        $this->getEntityManager()->flush();
+        
+        
+        /** @var LeagueManager $leagueManager */
+        $leagueManager = $this->getService(LeagueManager::class);
+        $nonEmptyLeague = $leagueManager->getByName('Test League One (with teams)');
+        
+        // Teams
+        $teams = [
+            Team::create('Test Team 1', 'color/white', $nonEmptyLeague),
+            Team::create('Test Team 2', 'color/black', $nonEmptyLeague),
+            Team::create('Test Team 3', 'color/green', $nonEmptyLeague),
+        ];
+        
+        foreach ($teams as $team) {
+            $this->getEntityManager()->persist($team);
+        }
+        
+        $this->getEntityManager()->flush();
+        
+        $this->setFixtures(self::LEAGUES_FIXTURES_KEY, $this->extractFixturesIds($leagues));
+        $this->setFixtures(self::TEAMS_FIXTURES_KEY, $this->extractFixturesIds($teams));
+        
+        $this->getEntityManager()->clear();
+    }
+
+    /**
+     * Database test data cleanup
+     */
+    protected function deleteTestFixtures(): void
+    {
+        // Users
+        /** @var UserProviderInterface $userProvider */
+        $userProvider = $this->getService('security.user.provider.concrete.app_user_provider');
+        $userEmail = $this->getOneFixture(self::USERS_FIXTURES_KEY);
+        $user = $userProvider->loadUserByUsername($userEmail);
+        
+        if ($user){
+            $this->getEntityManager()->remove($user);
+            $this->getEntityManager()->flush($user);
+        }
+        
+        // Teams
+        /** @var TeamManager $teamManager */
+        $teamManager = $this->getService(TeamManager::class);
+        
+        foreach ($this->getFixtures(self::TEAMS_FIXTURES_KEY) as $id) {
+            
+            $team = $teamManager->get($id);
+            
+            if ($team) {
+                $this->getEntityManager()->remove($team);
+            }
+        }
+        
+        // Leagues
+        /** @var LeagueManager $leagueManager */
+        $leagueManager = $this->getService(LeagueManager::class);
+
+        foreach ($this->getFixtures(self::LEAGUES_FIXTURES_KEY) as $id) {
+            
+            $league = $leagueManager->get($id);
+            
+            if ($league) {
+                $this->getEntityManager()->remove($league);
+            }
+        }
+        
+        $this->getEntityManager()->flush();
     }
 
     /**
@@ -164,11 +269,11 @@ abstract class BaseControllerTest extends WebTestCase
 
     /**
      * @param string $key
-     * @param array  $ids
+     * @param array  $fixturesIds
      */
-    protected function setFixturesIds(string $key, array $ids): void
+    protected function setFixtures(string $key, array $fixturesIds): void
     {
-        $this->fixturesIds[$key] = $ids;
+        $this->fixtures[$key] = $fixturesIds;
     }
 
     /**
@@ -176,19 +281,19 @@ abstract class BaseControllerTest extends WebTestCase
      *
      * @return array
      */
-    protected function getFixturesIds(string $key): array
+    protected function getFixtures(string $key): array
     {
-        return array_key_exists($key, $this->fixturesIds) ? $this->fixturesIds[$key] : [];
+        return array_key_exists($key, $this->fixtures) ? $this->fixtures[$key] : [];
     }
 
     /**
      * @param string $key
      *
-     * @return int|null
+     * @return int|string
      */
-    protected function getOneFixtureId(string $key): ?int
+    protected function getOneFixture(string $key)
     {
-        $ids = $this->getFixturesIds($key);
+        $ids = $this->getFixtures($key);
         
         if (!empty($ids)) {
             return $ids[0];
@@ -202,7 +307,7 @@ abstract class BaseControllerTest extends WebTestCase
      *
      * @return array
      */
-    protected function extractTestFixturesIds($entities): array 
+    protected function extractFixturesIds($entities): array 
     {
         $ids = [];
         
@@ -211,6 +316,22 @@ abstract class BaseControllerTest extends WebTestCase
         }
         
         return $ids;
+    }
+    
+    /**
+     * @param array $entities
+     *
+     * @return array
+     */
+    protected function extractFixturesEmails($entities): array 
+    {
+        $emails = [];
+        
+        foreach ($entities as $entity) {
+            $emails[] = method_exists($entity, 'getEmail') ? $entity->getEmail() : '';
+        }
+        
+        return $emails;
     }
 
 }

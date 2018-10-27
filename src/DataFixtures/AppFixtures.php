@@ -27,12 +27,9 @@ class AppFixtures extends Fixture
         // Create 5 users
         for ($i = 0; $i < 5; $i++) {
 
-            $user = new User();
+            $user = User::create('user' . $i . '@localhost');
             $encodedPassword = $this->passwordEncoder->encodePassword($user, 'pass' . $i);
-            
-            $user
-                ->setEmail('user' . $i . '@localdev')
-                ->setPassword($encodedPassword);
+            $user->setPassword($encodedPassword);
             
             $manager->persist($user);
         }

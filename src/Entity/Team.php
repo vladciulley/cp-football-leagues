@@ -41,7 +41,7 @@ class Team implements JsonSerializable
      */
     public static function create(string $name, string $strip, ?League $league = null): Team
     {
-        $team = new Team();
+        $team = new self();
         $team->setName($name)
             ->setStrip($strip)
             ->setLeague($league);
