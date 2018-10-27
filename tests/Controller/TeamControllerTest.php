@@ -65,8 +65,7 @@ class TeamControllerTest extends BaseControllerTest
         
         $badParams = [
             'name' => 'New Team Name',
-            'strip' => 'red/blue',
-            'league_id' => '0'
+            'strip' => 'red/blue'
         ];
         
         $response = $this->request('POST', '/teams', $token, $badParams);

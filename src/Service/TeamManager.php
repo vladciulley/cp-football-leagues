@@ -50,17 +50,19 @@ class TeamManager extends BaseManager
     }
 
     /**
-     * @param string $name
-     * @param string $strip
-     * @param int    $leagueId
+     * @param string   $name
+     * @param string   $strip
+     * @param int|null $leagueId
      *
      * @return Team|null
      */
-    public function create(string $name, string $strip, int $leagueId): ?Team
+    public function create(string $name, string $strip, ?int $leagueId = null): ?Team
     {
-        $league = $this->leagueManager->get($leagueId);
+        if ($leagueId) {
+            $league = $this->leagueManager->get($leagueId);
+        }
 
-        if ($league) {
+        if (isset($league) && $league) {
 
             $team = Team::create($name, $strip, $league);
             $this->entityManager->persist($team);
@@ -74,18 +76,20 @@ class TeamManager extends BaseManager
     }
 
     /**
-     * @param Team   $team
-     * @param string $name
-     * @param string $strip
-     * @param int    $leagueId
+     * @param Team     $team
+     * @param string   $name
+     * @param string   $strip
+     * @param int|null $leagueId
      *
      * @return Team|null
      */
-    public function update(Team $team, string $name, string $strip, int $leagueId): ?Team
+    public function update(Team $team, string $name, string $strip, ?int $leagueId = null): ?Team
     {
-        $league = $this->leagueManager->get($leagueId);
+        if ($leagueId){
+            $league = $this->leagueManager->get($leagueId);
+        }
 
-        if ($league) {
+        if (isset($league) && $league) {
 
             $team
                 ->setName($name)

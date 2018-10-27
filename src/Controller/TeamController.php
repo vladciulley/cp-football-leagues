@@ -26,8 +26,8 @@ class TeamController extends RESTController
     public function createTeams(Request $request, TeamManager $teamManager): JsonResponse
     {
         $team = $teamManager->create(
-            $request->get('name'),
-            $request->get('strip'),
+            $request->get('name', ''),
+            $request->get('strip', ''),
             $request->get('league_id')
         );
 
@@ -55,8 +55,8 @@ class TeamController extends RESTController
     {
         $team = $teamManager->update(
             $team,
-            $request->get('name'),
-            $request->get('strip'),
+            $request->get('name', ''),
+            $request->get('strip', ''),
             $request->get('league_id')
         );
 
