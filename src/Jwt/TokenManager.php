@@ -5,7 +5,7 @@ namespace App\Jwt;
 use ReallySimpleJWT\Exception\TokenValidatorException;
 use ReallySimpleJWT\Token;
 
-class TokenManager
+class TokenManager implements TokenManagerInterface
 {
     /** @var string $secret */
     private $secret;

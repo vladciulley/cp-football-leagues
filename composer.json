@@ -5,7 +5,6 @@
         "php": "^7.2.8",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "guzzlehttp/guzzle": "^6.3",
         "rbdwllr/reallysimplejwt": "^1.0",
         "sensio/framework-extra-bundle": "^5.2",
         "symfony-bundles/json-request-bundle": "^2.0",

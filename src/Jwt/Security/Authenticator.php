@@ -2,7 +2,7 @@
 
 namespace App\Jwt\Security;
 
-use App\Jwt\TokenManager;
+use App\Jwt\TokenManagerInterface;
 use ReallySimpleJWT\Exception\TokenValidatorException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,7 +13,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
 
-class Authenticator extends AbstractGuardAuthenticator
+class Authenticator extends AbstractGuardAuthenticator implements JwtTokenAuthenticatorInterface
 {
 
     const AUTH_HEADER = 'Authorization';
@@ -24,9 +24,9 @@ class Authenticator extends AbstractGuardAuthenticator
     /**
      * Authenticator constructor.
      *
-     * @param $tokenManager
+     * @param TokenManagerInterface $tokenManager
      */
-    public function __construct(TokenManager $tokenManager)
+    public function __construct(TokenManagerInterface $tokenManager)
     {
         $this->tokenManager = $tokenManager;
     }
@@ -102,7 +102,7 @@ class Authenticator extends AbstractGuardAuthenticator
     public function getCredentials(Request $request): array 
     {
         return [
-            'jwt_token' => $this->extractTokenFromRequest($request),
+            'jwt_token' => self::extractTokenFromRequest($request),
         ];
     }
 
@@ -233,9 +233,9 @@ class Authenticator extends AbstractGuardAuthenticator
     /**
      * @param Request $request
      *
-     * @return null|string|string[]
+     * @return string
      */
-    private function extractTokenFromRequest(Request $request): ?string 
+    public static function extractTokenFromRequest(Request $request): string 
     {
         
         if ($request->headers->has(self::AUTH_HEADER)) {

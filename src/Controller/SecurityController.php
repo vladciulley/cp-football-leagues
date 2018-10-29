@@ -2,7 +2,8 @@
 
 namespace App\Controller;
 
-use App\Jwt\TokenManager;
+use App\Jwt\TokenManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -10,12 +11,12 @@ class SecurityController extends RESTController
 {
     /**
      * @Route("/login", name="login", methods={"POST"})
-     * @param TokenManager $tokenManager
+     * @param TokenManagerInterface $tokenManager
      *
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      * @throws \Exception
      */
-    public function login(TokenManager $tokenManager)
+    public function login(TokenManagerInterface $tokenManager): JsonResponse
     {
         /** @var UserInterface $user */
         $user = $this->getUser();
