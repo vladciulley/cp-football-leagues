@@ -112,6 +112,6 @@ class TeamManager extends BaseManager
      */
     public function getByLeague(League $league): array
     {
-        return $this->teamRepository->findBy(['league' => $league]);
+        return $this->teamRepository->findByLeague($league);
     }
 }
