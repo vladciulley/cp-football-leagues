@@ -7,6 +7,7 @@ use App\Service\TeamManager;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -36,7 +37,7 @@ class TeamController extends RESTController
                 'Location' => $this->generateUrl('api_teams_get', ['id' => $team->getId()]),
             ]);
         } else {
-            return $this->json(null, JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException();
         }
     }
 
@@ -63,7 +64,12 @@ class TeamController extends RESTController
         if ($team) {
             return $this->json(null, JsonResponse::HTTP_NO_CONTENT);
         } else {
-            return $this->json(null, JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'error' => [
+                    'code' => JsonResponse::HTTP_BAD_REQUEST,
+                    'message' => 'Bad Request'
+                ]
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
     }
 

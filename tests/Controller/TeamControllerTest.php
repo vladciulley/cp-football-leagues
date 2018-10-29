@@ -27,7 +27,21 @@ class TeamControllerTest extends BaseControllerTest
             $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $response->getStatusCode());
         }
     }
-    
+
+    public function testBadRequest()
+    {
+        $token = $this->getJwtToken();
+        
+        $badParams = [
+            'name' => 'New Team Name',
+            'strip' => 'red/blue'
+        ];
+        
+        $response = $this->request('POST', '/teams', $token, $badParams);
+        
+        $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $response->getStatusCode());
+        $this->assertJsonStringEqualsJsonString(json_encode($this->badRequestJson), $response->getContent());
+    }
     
     public function testGetTeams(): void
     {
@@ -62,24 +76,13 @@ class TeamControllerTest extends BaseControllerTest
         $token = $this->getJwtToken();
         $leagueId = $this->getOneFixture(self::LEAGUES_FIXTURES_KEY);
         
-        
-        $badParams = [
-            'name' => 'New Team Name',
-            'strip' => 'red/blue'
-        ];
-        
-        $response = $this->request('POST', '/teams', $token, $badParams);
-        
-        $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $response->getStatusCode());
-        
-        
-        $goodParams = [
+        $params = [
             'name' => 'New Team Name',
             'strip' => 'red/blue',
             'league_id' => $leagueId
         ];
         
-        $response = $this->request('POST', '/teams', $token, $goodParams);
+        $response = $this->request('POST', '/teams', $token, $params);
         
         $responseData = $this->getResponseData($response);
         

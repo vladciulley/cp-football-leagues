@@ -12,6 +12,7 @@ use Symfony\Bridge\Doctrine\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
@@ -30,6 +31,27 @@ abstract class BaseControllerTest extends WebTestCase
     
     /** @var Client $client */
     private $client;
+    
+    protected $notFoundJson = [
+        'error' => [
+            'code' => JsonResponse::HTTP_NOT_FOUND,
+            'message' => 'Resource Not Found'
+        ]
+    ];
+    
+    protected $badRequestJson = [
+        'error' => [
+            'code' => JsonResponse::HTTP_BAD_REQUEST,
+            'message' => 'Bad Request'
+        ]
+    ];
+    
+    protected $methodNotAllowedJson = [
+        'error' => [
+            'code' => JsonResponse::HTTP_METHOD_NOT_ALLOWED,
+            'message' => 'Method Not Allowed'
+        ]
+    ];
     
     public function setUp(): void
     {

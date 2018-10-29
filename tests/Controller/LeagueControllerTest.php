@@ -29,7 +29,20 @@ class LeagueControllerTest extends BaseControllerTest
         foreach ($tests as $test) {
             $response = $this->request($test['method'], $test['uri'], $token);
             $this->assertEquals(JsonResponse::HTTP_NOT_FOUND, $response->getStatusCode());
+            $this->assertJsonStringEqualsJsonString(json_encode($this->notFoundJson), $response->getContent());
         }
+    }
+    
+    public function testMethodNotAllowed()
+    {
+        $test = [
+            'method' => 'GET',
+            'uri' => '/login',
+        ];
+        
+        $response = $this->request($test['method'], $test['uri']);
+        $this->assertEquals(JsonResponse::HTTP_METHOD_NOT_ALLOWED, $response->getStatusCode());
+        $this->assertJsonStringEqualsJsonString(json_encode($this->methodNotAllowedJson), $response->getContent());
     }
     
     public function testGetLeagues(): void
