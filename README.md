@@ -19,8 +19,13 @@ uses the services, they are covered on some extent.
 hence I have built a set of test fixtures and a mechanism that creates them when the test begins 
 and deletes them when completed.
 * I have used Sensio's ParamConverter and symfony-bundles/json-request-bundle for thinner controllers.
-* I have created an ExceptionListener to deal with 404, 405 and 500 errors, so they will also 
+* I have created an ExceptionListener to deal with 400, 404, 405 and 500 errors, so they will also 
 return application/json responses.
+* Things that I would have done further would be creating a validation service using Symfony validators to 
+check that no extra fields are present on the request data and that the fields received have proper 
+values. When validation fails it should return a HTTP Bad Request with the violation messages. The
+violation messages could be transformed from the returned ```ConstraintViolationList``` to a messages
+array using a custom data transformer.
 
 ### Installation
 
