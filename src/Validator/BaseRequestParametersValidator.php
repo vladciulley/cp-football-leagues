@@ -10,11 +10,10 @@ abstract class BaseRequestParametersValidator implements RequestParametersValida
 {
     /**
      * @param array $parameters
-     * @param null  $constraints
      *
      * @return ConstraintViolationListInterface
      */
-    public function validate(array $parameters, $constraints = null): ConstraintViolationListInterface
+    public function validate(array $parameters): ConstraintViolationListInterface
     {
         $validator = Validation::createValidator();
         $violations = $validator->validate($parameters, $this->getConstraints());

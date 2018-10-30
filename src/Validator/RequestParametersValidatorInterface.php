@@ -6,5 +6,5 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 interface RequestParametersValidatorInterface
 {
-    public function validate(array $parameters, $constraints = null): ConstraintViolationListInterface;
+    public function validate(array $parameters): ConstraintViolationListInterface;
 }
