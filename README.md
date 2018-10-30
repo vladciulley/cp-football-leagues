@@ -11,8 +11,6 @@ Symfony's ```AbstractGuardAuthenticator```.
 You can change this setting in services.yaml, under ```App\Jwt\TokenManager```.
 * Since nothing was specified in the test specs regarding whether the orphan teams should be 
 deleted or not when deleting a league, I chose to also remove them.
-* The team update endpoint spec stated that it should _"Replace all attributes of a football team"_ 
-so I allowed empty team name and strip, but returned a HTTP Bad Request when the league is missing.
 * The tests I have created are for the API endpoints (no services tests), but since the API 
 uses the services, they are covered on some extent.
 * I have not used a different database for testing, since this is just a test project,
