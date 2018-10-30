@@ -4,32 +4,34 @@ namespace App\Service;
 
 use App\Entity\League;
 use App\Repository\LeagueRepository;
+use App\Transformer\ViolationDataTransformer;
+use App\Validator\LeagueRequestParametersValidator;
 use Doctrine\ORM\EntityManagerInterface;
 
 class LeagueManager extends BaseManager
 {
-
-    /**
-     * @var EntityManagerInterface $entityManager
-     */
-    private $entityManager;
-
     /**
      * @var LeagueRepository $leagueRepository
      */
     private $leagueRepository;
 
-
     /**
      * LeagueManager constructor.
      *
-     * @param EntityManagerInterface $entityManager
-     * @param LeagueRepository       $leagueRepository
+     * @param EntityManagerInterface           $entityManager
+     * @param LeagueRequestParametersValidator $parametersValidator
+     * @param ViolationDataTransformer         $violationDataTransformer
+     * @param LeagueRepository                 $leagueRepository
      */
-    public function __construct(EntityManagerInterface $entityManager, LeagueRepository $leagueRepository)
+    public function __construct(
+        EntityManagerInterface $entityManager, 
+        LeagueRequestParametersValidator $parametersValidator,
+        ViolationDataTransformer $violationDataTransformer,
+        LeagueRepository $leagueRepository)
     {
-        $this->entityManager = $entityManager;
         $this->leagueRepository = $leagueRepository;
+        
+        parent::__construct($entityManager, $parametersValidator, $violationDataTransformer);
     }
 
     /**

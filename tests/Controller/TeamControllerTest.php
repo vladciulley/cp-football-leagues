@@ -39,8 +39,14 @@ class TeamControllerTest extends BaseControllerTest
         
         $response = $this->request('POST', '/teams', $token, $badParams);
         
+        $responseData = $this->getResponseData($response);
+        $responseDataWithoutMessages = $responseData;
+        unset($responseDataWithoutMessages['error']['errors']);
+        
         $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $this->assertJsonStringEqualsJsonString(json_encode($this->badRequestJson), $response->getContent());
+        $this->assertJsonStringEqualsJsonString(json_encode($this->badRequestJson), json_encode($responseDataWithoutMessages));
+        $this->assertTrue(is_array($responseData['error']['errors']));
+        $this->assertNotEmpty($responseData['error']['errors']);
     }
     
     public function testGetTeams(): void

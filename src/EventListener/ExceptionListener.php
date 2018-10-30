@@ -44,10 +44,12 @@ class ExceptionListener
                     break;
                     
                 case JsonResponse::HTTP_BAD_REQUEST:
+                    
                     $response = new JsonResponse([
                         'error' => [
                             'code' => JsonResponse::HTTP_BAD_REQUEST,
-                            'message' => 'Bad Request'
+                            'message' => 'Bad Request',
+                            'errors' => $exception->getData()
                         ]
                     ]);
                     break;

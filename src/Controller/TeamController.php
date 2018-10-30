@@ -17,6 +17,18 @@ class TeamController extends RESTController
 {
 
     /**
+     * Creates a new team.
+     * POST /teams
+     *
+     * Request example:
+     * <code>
+     * {
+     *     "name": "New Team Name",
+     *     "strip": "red/blue"
+     *     "league_id": 1
+     * }
+     * </code>
+     *
      * @Route("", name="api_teams_post", methods={"POST"})
      *
      * @param Request     $request
@@ -26,11 +38,7 @@ class TeamController extends RESTController
      */
     public function createTeams(Request $request, TeamManager $teamManager): JsonResponse
     {
-        $team = $teamManager->create(
-            $request->get('name', ''),
-            $request->get('strip', ''),
-            $request->get('league_id')
-        );
+        $team = $teamManager->create($request->request->all());
 
         if ($team) {
             return $this->json(null, JsonResponse::HTTP_CREATED, [
@@ -42,6 +50,18 @@ class TeamController extends RESTController
     }
 
     /**
+     * Updates an existing team.
+     * PUT /teams
+     * 
+     * Request example:
+     * <code>
+     * {
+     *     "name": "Updated Team Name",
+     *     "strip": "red/blue"
+     *     "league_id": 1
+     * }
+     * </code>
+     * 
      * @Route("/{id}", name="api_teams_put", methods={"PUT"})
      *
      * @param Request     $request
@@ -54,22 +74,12 @@ class TeamController extends RESTController
      */
     public function updateTeams(Request $request, Team $team, TeamManager $teamManager): JsonResponse
     {
-        $team = $teamManager->update(
-            $team,
-            $request->get('name', ''),
-            $request->get('strip', ''),
-            $request->get('league_id')
-        );
+        $team = $teamManager->update($team, $request->request->all());
 
         if ($team) {
             return $this->json(null, JsonResponse::HTTP_NO_CONTENT);
         } else {
-            return $this->json([
-                'error' => [
-                    'code' => JsonResponse::HTTP_BAD_REQUEST,
-                    'message' => 'Bad Request'
-                ]
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            throw new BadRequestHttpException();
         }
     }
 
