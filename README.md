@@ -26,10 +26,11 @@ and deletes them when completed.
 * I have used Sensio's ParamConverter and symfony-bundles/json-request-bundle for thinner controllers.
 * I have created an exception listener to deal with 400, 404, 405 and 500 errors, so they will also 
 return application/json responses. It can be found in ```App\EventListener```.
-* Furthermore, I would have built unit tests for services ```App\Service\LeagueManager``` and 
-```App\Service\TeamManager``` and an entity for the JSON responses that are currently simple arrays,
-also I would have created a fallback in the exception listener to cover all possible errors, not
-just specific ones, so all responses would become a JSON formatted response.
+* Furthermore, I would add:
+  * Unit tests for services ```App\Service\LeagueManager``` and ```App\Service\TeamManager```. 
+  * An entity for the JSON responses that are currently simple arrays.
+  * A fallback in the exception listener to cover all possible errors, not just specific ones, 
+  so all responses would be JSON formatted.
 
 ### Installation
 
